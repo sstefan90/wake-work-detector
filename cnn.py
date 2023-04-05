@@ -39,9 +39,10 @@ class AudioModel(nn.Module):
         self.conv_block_2 = nn.Sequential(self.conv_2, self.pool_2, self.bn_2, self.relu)
 
         self.conv_3 = nn.Conv2d(in_channels=2, out_channels=1, kernel_size=(3,3), padding='valid')
+        self.pool_3= nn.MaxPool2d(kernel_size=2, stride=2)
         self.bn_3 = nn.BatchNorm2d(num_features=1)
 
-        self.conv_block_3 = nn.Sequential(self.conv_3, self.bn_3, self.relu)
+        self.conv_block_3 = nn.Sequential(self.conv_3, self.pool_3, self.relu)
 
         self.fc_1 = nn.Linear(in_features=864, out_features=64)
         self.fc_2 = nn.Linear(in_features=64, out_features=2)
@@ -51,14 +52,8 @@ class AudioModel(nn.Module):
     def forward(self, x):
         x = self.conv_block_1(x)
         x = self.conv_block_2(x)
-        #print('output shape after convblock2', x.shape)
-        #x = self.conv_block_3(x)
-        #x = x.squeeze()
         x = self.conv_3(x)
-        #print('output shape after convblock3', x.shape)
-
         x = x.reshape(x.shape[0], x.shape[1]*x.shape[2]*x.shape[3])
-        #print("reshape", x.shape)
         x = self.linear_layer(x)
         return x
 
@@ -78,9 +73,10 @@ def model_training(args, writer, log_dir):
     model = AudioModel()
     model.to(DEVICE)
     model.apply(initialize_weights)
+    
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=0.1)
-    scheduler = lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
+    scheduler = lr_scheduler.ExponentialLR(optimizer, gamma=0.99)
     criterion = nn.BCEWithLogitsLoss(weight=torch.tensor([0, args.weight]))
 
     for epoch in progress_bar:
@@ -94,15 +90,13 @@ def model_training(args, writer, log_dir):
             y_train = nn.functional.one_hot(y_train, num_classes=2).view(y_train.shape[0], 2).float()
             logits = model(X_train)
             loss = criterion(logits, y_train)
-            
             loss.backward()
-            
             optimizer.step()
             optimizer.zero_grad()
             iteration = epoch*(len(training_dataloader)) + step
             train_loss.append(loss.detach().cpu().item())
             step +=1
-        #scheduler.step()
+        scheduler.step()
         
     
         #at the end of each epoch, run validation set
@@ -133,7 +127,7 @@ def model_training(args, writer, log_dir):
 def main(args):
     log_dir = args.log_dir
     if log_dir is None:
-        log_dir = f'./logs/audiomodel.batch_size:{args.batch_size}.lr:{args.lr}.lr_schedule:{args.lr_schedule}.epochs:{args.epochs}'
+        log_dir = f'./logs/audiomodel.batch_size:{args.batch_size}.lr:{args.lr}.lr_schedule:{args.lr_schedule}.weight_decay:{args.weight_decay}.weight:{args.weight}.epochs:{args.epochs}'
 
     if not os.path.exists(log_dir):
         os.mkdir(log_dir)
@@ -144,10 +138,11 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='parse user input arguments into function')
-    parser.add_argument('--epochs',type=int, default=50, help='number of epochs')
+    parser.add_argument('--epochs',type=int, default=42, help='number of epochs')
     parser.add_argument('--batch_size', type=int, default=16, help='number of trianing examples in training batch')
     parser.add_argument('--lr', type=int, default=.0005, help='sample rate of recording')
-    parser.add_argument('--weight', type=float, default=5.0, help='number of positive label samples that will be recorded')
+    parser.add_argument('--weight', type=float, default=4.0, help='number of positive label samples that will be recorded')
+    parser.add_argument('--weight_decay', type=float, default=0.1, help='number of positive label samples that will be recorded')
     parser.add_argument('--lr_schedule', type=int, default=5, help='learning rate schedule (gamma decay)')
     parser.add_argument('--log_dir', type=int, default=None, help='number of channels that the recorded audio will contain')
     args = parser.parse_args()

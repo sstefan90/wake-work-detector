@@ -7,7 +7,6 @@ from sklearn import preprocessing
 import random
 import numpy as np
 import torch
-import torchaudio.transforms
 from torchaudio.transforms import TimeMasking, FrequencyMasking
 from torch.utils.data import Dataset, DataLoader
 import pickle
@@ -212,16 +211,6 @@ def process_data(args):
         cnt +=1
         if cnt >= len(augment_types):
             break
-
-    '''
-
-    print('prev_train_len', len(train_files))
-
-    for augment in augmented_data:
-        print(augment[:10])
-        train_files +=augment
-    print('after augment', len(train_files))
-    '''
 
     files = []
     X_train_file = "./data_processed/X_train.dat"
