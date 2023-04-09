@@ -1,6 +1,6 @@
 # Wake Word Detector + On Device ML
 
-This project involved manually collecting data for wake word detection, preprocessing said data, and training a custom built CNN model architecture for binary classification.
+This project involved manually collecting data for wake word detection, preprocessing said data, training a custom built CNN model architecture for binary classification, and deploying the model on an Android device.
 
 ### utils.py 
 contains the code for (1) collecting the audio data from the computer microphone (200 positive samples, 1000 negative samples), (2) data augmentation techniques including frequency and time shifting/masking, aas well as pitch shift. 
