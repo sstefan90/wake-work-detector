@@ -1,4 +1,4 @@
-# WAKEWORD DETECTOR
+# Wake Word Detector + On Device ML
 
 This project involved manually collecting data for wake word detection, preprocessing said data, and training a custom built CNN model architecture for binary classification.
 
