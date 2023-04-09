@@ -3,8 +3,10 @@
 This project involved manually collecting data for wake word detection, preprocessing said data, training a custom built CNN model architecture for binary classification, and deploying the model on an Android device.
 
 ### utils.py 
-contains the code for (1) collecting the audio data from the computer microphone (200 positive samples, 1000 negative samples), (2) data augmentation techniques including frequency and time shifting/masking, aas well as pitch shift. 
-This file contains the method that creates the DataLoader for our model training.
+contains the code for (1) collecting the audio data from the computer microphone (200 positive samples, 1000 negative samples), (2) data augmentation techniques including frequency and time shifting/masking, as well as pitch shift, and (3) code to create, for each training example, a melspectrogram normalized to decibel scale. This file also contains the method that creates the DataLoader for our model training.
+
+### data_exploration.ipynb
+Before training the model, data was explored and analyzed to understand what preprocessing techiques would work best. This investigation uncovered that at the beginning 100-200ms of each positive label audio file, the word "go" was audible. This is understandable, as "go" was the cue for the data provider to utter the wakeword during the data collection process. Because of this, I have stripped the first 300ms of each audio recording in the dataset.
 
 ### cnn.py
 this file contains the implementation and training of the CNN model. Hyperparameter search was conducted by running model training with a grid search to find optimal parameters for learning rate, weight decay, label weights, etc.
